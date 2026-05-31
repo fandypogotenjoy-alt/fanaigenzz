@@ -1,54 +1,28 @@
-// Anda perlu menginstal google-auth-library jika menggunakan modul Node secara lokal,
-// namun Vercel akan otomatis mengurus dependensi jika dicantumkan di package.json.
-const { OAuth2Client } = require('google-auth-library');
-
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const client = new OAuth2Client(CLIENT_ID);
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    const { prompt, token } = req.body;
-
-    if (!prompt || !token) {
-        return res.status(400).json({ error: 'Prompt dan Token wajib diisi' });
-    }
+    // Pastikan hanya menerima metode POST dari frontend
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        // 1. Validasi Token Google (Cek apakah user benar-benar login resmi)
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: CLIENT_ID,
-        });
-        const payload = ticket.getPayload();
-        const userEmail = payload.email; // ID Unik pengguna berdasarkan Gmail
+        // Mengambil kunci rahasia dari Environment Variables Vercel
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); 
+        
+        // Memilih model AI yang akan dipakai (Di sinilah kamu atur ke Gemini 3.1)
+        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash" });
 
-        // 2. Panggil Gemini API Resmi Google
-        const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        });
+        // Mengambil teks yang diketik pengguna
+        const prompt = req.body.prompt;
+        
+        // Menyuruh Gemini menjawab
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-        const geminiData = await geminiResponse.json();
-        const aiReply = geminiData.candidates[0].content.parts[0].text;
-
-        // 3. DI SINI TEMPAT MENYIMPAN RIWAYAT (DATABASE)
-        // Kamu bisa mengintegrasikannya dengan Supabase, Firebase, atau MongoDB.
-        // Contoh konsep logika penyimpanan:
-        // await saveToDatabase({ email: userEmail, prompt: prompt, reply: aiReply, timestamp: new Date() });
-        console.log(`Menyimpan riwayat untuk ${userEmail}`); 
-
-        // Kirim balik respon ke frontend
-        return res.status(200).json({ reply: aiReply });
-
+        // Mengirim jawaban kembali ke index.html
+        res.status(200).json({ reply: text });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'Terjadi kesalahan pada sistem internal.' });
+        console.error("Error dari Gemini API:", error);
+        res.status(500).json({ error: 'Gagal memproses data di server.' });
     }
 }
