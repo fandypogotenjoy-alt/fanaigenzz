@@ -9,8 +9,7 @@ export default async function handler(req, res) {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); 
         
         // Memilih model AI yang akan dipakai (Di sinilah kamu atur ke Gemini 3.1)
-        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash" });
-
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         // Mengambil teks yang diketik pengguna
         const prompt = req.body.prompt;
         
