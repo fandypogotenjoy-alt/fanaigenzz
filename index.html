@@ -6,29 +6,91 @@
     <title>FANAIgenz - Next Gen AI</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        /* --- KODE CSS LAMA TETAP DIPERTAHANKAN --- */
+        /* --- KODE CSS LAMA (PARTIKEL & CONTAINER UTAMA) --- */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
         body { background-color: #050505; color: #fff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        .ai-container { position: relative; z-index: 2; background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 20px; padding: 40px; width: 90%; max-width: 600px; box-shadow: 0 0 40px rgba(0, 243, 255, 0.2); animation: float 6s ease-in-out infinite; }
-        .title { text-align: center; font-size: 3rem; font-weight: bold; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 5px; position: relative; text-shadow: 0 0 10px #00f3ff, 0 0 40px #bd00ff; animation: glitch 2s infinite; }
-        .subtitle { text-align: center; color: #00f3ff; font-size: 1rem; margin-bottom: 20px; letter-spacing: 2px; }
-        .input-box { width: 100%; padding: 15px; background: rgba(0, 0, 0, 0.5); border: 1px solid #bd00ff; border-radius: 10px; color: #00f3ff; font-size: 1.1rem; outline: none; }
-        .input-box:focus { box-shadow: 0 0 20px rgba(189, 0, 255, 0.5); border-color: #00f3ff; }
-        .btn-generate { width: 100%; margin-top: 20px; padding: 15px; background: transparent; color: #00f3ff; font-size: 1.2rem; font-weight: bold; text-transform: uppercase; border: 2px solid #00f3ff; border-radius: 10px; cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
-        .btn-generate:hover { background: #00f3ff; color: #000; box-shadow: 0 0 30px #00f3ff; transform: scale(1.02); }
-        .response-box { margin-top: 30px; min-height: 100px; padding: 15px; border-left: 4px solid #bd00ff; background: rgba(189, 0, 255, 0.1); color: #ddd; display: none; font-size: 1rem; line-height: 1.5; max-height: 200px; overflow-y: auto; }
         
-        /* --- CSS BARU UNTUK LOGIN & UTILITY --- */
-        .auth-container { display: flex; justify-content: center; margin-bottom: 20px; }
-        .user-profile { display: none; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(0, 243, 255, 0.2); }
+        .ai-container { 
+            position: relative; z-index: 2; 
+            background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(15px); 
+            border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 20px; 
+            padding: 30px; width: 95%; max-width: 800px; /* Diperlebar sedikit agar chat lega */
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.2); 
+            display: flex; flex-direction: column; max-height: 90vh; /* Agar tidak bablas dari layar */
+        }
+        
+        .title { text-align: center; font-size: 2.5rem; font-weight: bold; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 5px; text-shadow: 0 0 10px #00f3ff, 0 0 40px #bd00ff; animation: glitch 2s infinite; }
+        .subtitle { text-align: center; color: #00f3ff; font-size: 1rem; margin-bottom: 20px; letter-spacing: 2px; }
+
+        /* --- KODE CSS BARU: AREA BUBBLE CHAT --- */
+        .chat-area {
+            flex-grow: 1; /* Mengisi ruang kosong */
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(189, 0, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        /* Custom Scrollbar biar makin Sci-Fi */
+        .chat-area::-webkit-scrollbar { width: 8px; }
+        .chat-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .chat-area::-webkit-scrollbar-thumb { background: rgba(0, 243, 255, 0.5); border-radius: 10px; }
+
+        .bubble {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-size: 1.15rem; /* Font diperbesar agar lebih jelas dan nyaman dibaca */
+            line-height: 1.5;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        /* Bubble User (Merapat ke Kanan) */
+        .bubble.user {
+            align-self: flex-end;
+            background: rgba(0, 243, 255, 0.15);
+            border: 1px solid #00f3ff;
+            border-bottom-right-radius: 2px;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        /* Bubble AI (Merapat ke Kiri) */
+        .bubble.ai {
+            align-self: flex-start;
+            background: rgba(189, 0, 255, 0.15);
+            border: 1px solid #bd00ff;
+            border-bottom-left-radius: 2px;
+            color: #e0e0e0;
+            box-shadow: 0 0 15px rgba(189, 0, 255, 0.1);
+        }
+
+        /* --- KODE CSS INPUT & TOMBOL --- */
+        .input-group { display: flex; gap: 10px; }
+        .input-box { flex-grow: 1; padding: 15px; background: rgba(0, 0, 0, 0.5); border: 1px solid #bd00ff; border-radius: 10px; color: #00f3ff; font-size: 1.1rem; outline: none; }
+        .input-box:focus { box-shadow: 0 0 20px rgba(189, 0, 255, 0.5); border-color: #00f3ff; }
+        .btn-generate { padding: 0 25px; background: transparent; color: #00f3ff; font-size: 1.1rem; font-weight: bold; text-transform: uppercase; border: 2px solid #00f3ff; border-radius: 10px; cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+        .btn-generate:hover:not(:disabled) { background: #00f3ff; color: #000; box-shadow: 0 0 30px #00f3ff; transform: scale(1.05); }
+        .btn-generate:disabled { border-color: #555; color: #555; cursor: not-allowed; box-shadow: none; }
+
+        /* --- CSS AUTH PROFIL --- */
+        .auth-container { display: flex; justify-content: center; margin-bottom: 15px; }
+        .user-profile { display: none; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(0, 243, 255, 0.2); }
         .user-info { display: flex; align-items: center; gap: 10px; }
         .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #00f3ff; }
         .btn-logout { background: transparent; color: #ff0055; border: 1px solid #ff0055; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
-        .btn-logout:hover { background: #ff0055; color: #fff; }
         .hidden { display: none !important; }
 
-        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes glitch { 0%, 100% { text-shadow: 2px 0 #00f3ff, -2px 0 #bd00ff; } 50% { text-shadow: -2px 0 #00f3ff, 2px 0 #bd00ff; } }
     </style>
 </head>
@@ -40,7 +102,7 @@
         <h1 class="title">FANAIgenz</h1>
         <p class="subtitle">Neural Network System Online</p>
         
-       <div class="auth-container" id="login-area">
+        <div class="auth-container" id="login-area">
             <div id="g_id_onload"
                  data-client_id="1098689643267-hrlj7u8ciq302s795620b7cuqnf8vev2.apps.googleusercontent.com"
                  data-callback="handleCredentialResponse"
@@ -57,38 +119,35 @@
             <button class="btn-logout" onclick="logout()">Disconnect</button>
         </div>
         
-        <input type="text" id="ai-input" class="input-box" placeholder="Silahkan login dahulu..." disabled>
-        <button class="btn-generate" id="btn-submit" onclick="generateAI()" disabled>Inisiasi Proses</button>
+        <div class="chat-area" id="chat-box">
+            <div class="bubble ai" id="welcome-msg" style="display: none;">System Online. Silakan masukkan perintah.</div>
+        </div>
 
-        <div class="response-box" id="ai-response">
-            <span id="typewriter"></span>
+        <div class="input-group">
+            <input type="text" id="ai-input" class="input-box" placeholder="Silahkan login dahulu..." disabled onkeypress="handleEnter(event)">
+            <button class="btn-generate" id="btn-submit" onclick="generateAI()" disabled>Kirim</button>
         </div>
     </div>
 
     <script>
-        // --- LOGIK AUTH & INTERAKSI API ---
+        // --- LOGIK AUTH ---
         let userToken = null;
 
-        // Callback setelah user berhasil login lewat Google
         function handleCredentialResponse(response) {
             userToken = response.credential;
-            
-            // Decode JWT Token kasaran untuk ambil info profil di frontend
             const base64Url = userToken.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const payload = JSON.parse(window.atob(base64));
 
-            // Update UI Profil
             document.getElementById('user-img').src = payload.picture;
             document.getElementById('user-name').innerText = payload.name;
-            
             document.getElementById('login-area').classList.add('hidden');
             document.getElementById('user-area').style.display = 'flex';
             
-            // Aktifkan Input Form
             document.getElementById('ai-input').disabled = false;
-            document.getElementById('ai-input').placeholder = "Masukkan prompt kamu di sini...";
+            document.getElementById('ai-input').placeholder = "Ketik perintah di sini... (Enter untuk kirim)";
             document.getElementById('btn-submit').disabled = false;
+            document.getElementById('welcome-msg').style.display = 'block';
         }
 
         function logout() {
@@ -99,54 +158,92 @@
             document.getElementById('ai-input').value = '';
             document.getElementById('ai-input').placeholder = "Silahkan login dahulu...";
             document.getElementById('btn-submit').disabled = true;
-            document.getElementById('ai-response').style.display = 'none';
+            
+            // Bersihkan riwayat chat saat logout
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '<div class="bubble ai" id="welcome-msg" style="display: none;">System Online. Silakan masukkan perintah.</div>';
         }
 
-        async function generateAI() {
-            const input = document.getElementById('ai-input').value;
-            const responseBox = document.getElementById('ai-response');
-            const typeWriterElement = document.getElementById('typewriter');
-            
-            if (!input.trim() || !userToken) return;
+        // --- FUNGSI ENTER UNTUK KIRIM ---
+        function handleEnter(event) {
+            if (event.key === "Enter") {
+                generateAI();
+            }
+        }
 
-            responseBox.style.display = "block";
-            typeWriterElement.innerHTML = "[FANAIgenz]: Menghubungkan ke core AI...";
+        // --- LOGIK PEMBUATAN BUBBLE CHAT & FETCH ---
+        async function generateAI() {
+            const inputField = document.getElementById('ai-input');
+            const chatBox = document.getElementById('chat-box');
+            const btnSubmit = document.getElementById('btn-submit');
+            const prompt = inputField.value.trim();
+            
+            if (!prompt || !userToken) return;
+
+            // 1. Cetak Bubble User di layar
+            const userBubble = document.createElement('div');
+            userBubble.className = 'bubble user';
+            userBubble.innerText = prompt;
+            chatBox.appendChild(userBubble);
+
+            // Bersihkan input dan matikan tombol sementara
+            inputField.value = '';
+            inputField.disabled = true;
+            btnSubmit.disabled = true;
+            
+            // Otomatis scroll ke paling bawah
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // 2. Cetak Bubble AI sementara (Loading)
+            const aiBubble = document.createElement('div');
+            aiBubble.className = 'bubble ai';
+            aiBubble.innerText = "Memproses data...";
+            chatBox.appendChild(aiBubble);
+            chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                // Panggil Serverless Function di Vercel
+                // Tembak ke Vercel (yang sudah menggunakan kode fetch saktimu)
                 const response = await fetch('/api/gemini', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: input, token: userToken })
+                    body: JSON.stringify({ prompt: prompt, token: userToken })
                 });
 
                 const data = await response.json();
                 
                 if(data.error) {
-                    typeWriterElement.innerHTML = `[ERROR]: ${data.error}`;
-                    return;
-                }
-
-                // Efek Ketik respons dari Gemini
-                typeWriterElement.innerHTML = "";
-                let aiText = data.reply;
-                let i = 0;
-                function typeWriter() {
-                    if (i < aiText.length) {
-                        typeWriterElement.innerHTML += aiText.charAt(i);
-                        i++;
-                        setTimeout(typeWriter, 20);
+                    aiBubble.innerText = `[ERROR]: ${data.error}`;
+                } else {
+                    // 3. Efek Ketik (Typewriter) untuk jawaban AI
+                    aiBubble.innerText = "";
+                    let aiText = data.reply;
+                    let i = 0;
+                    
+                    function typeWriter() {
+                        if (i < aiText.length) {
+                            aiBubble.innerHTML += aiText.charAt(i) === '\n' ? '<br>' : aiText.charAt(i);
+                            i++;
+                            // Auto scroll terus saat ngetik
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                            setTimeout(typeWriter, 15);
+                        } else {
+                            // Nyalakan input lagi setelah selesai ngetik
+                            inputField.disabled = false;
+                            btnSubmit.disabled = false;
+                            inputField.focus();
+                        }
                     }
+                    typeWriter();
                 }
-                typeWriter();
 
             } catch (err) {
-                typeWriterElement.innerHTML = "[ERROR]: Gagal terhubung ke server.";
+                aiBubble.innerText = "[ERROR SISTEM]: Gagal terhubung ke jaringan server.";
+                inputField.disabled = false;
+                btnSubmit.disabled = false;
             }
-            document.getElementById('ai-input').value = '';
         }
 
-        // --- KODE ANIMASI CANVAS PARTIKEL (Sama seperti sebelumnya) ---
+        // --- KODE ANIMASI CANVAS PARTIKEL ---
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
