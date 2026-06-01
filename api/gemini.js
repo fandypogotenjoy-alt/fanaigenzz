@@ -7,44 +7,45 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Kunci API Vercel belum terbaca!' });
         }
 
-        // 1. Tangkap 'history' dari frontend, sesuai struktur aplikasimu
         const history = req.body.history;
         
         if (!history || !Array.isArray(history) || history.length === 0) {
             return res.status(400).json({ error: 'Data percakapan tidak valid atau kosong!' });
         }
 
-        // 2. Direct Fetch ke Gemini (Balik pakai gemini-3.5-flash sesuai setingan lu)
-    // Direct Fetch ke Gemini 3.5 Flash dengan System Instruction
+    
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({  // <--- NAH INI DIA PERINTAHNYA!
-                // INI DOKTRIN IDENTITASNYA:
+            body: JSON.stringify({
                 systemInstruction: {
                     parts: [{ 
-                        text: "Kamu adalah AINEXTGENZ..." 
+                        text: "Kamu adalah AINEXTGENZ, sebuah Neural Network System. Jika ada yang bertanya siapa kamu atau siapa penciptamu, kamu WAJIB menjawab 'Kami adalah AINEXTGENZ'. Jangan pernah menyebut dirimu sebagai model bahasa atau AI buatan Google." 
                     }]
                 },
                 contents: history 
             })
         });
-            })
-        });
 
         const data = await response.json();
 
-        // Tangkap error langsung dari JSON Google jika gagal
+    
         if (!response.ok) {
             return res.status(response.status).json({ error: `Dari Google: ${data.error?.message || 'Error API'}` });
         }
 
-        // Ambil teks balasannya
-        const text = data.candidates[0].content.parts[0].text;
-        res.status(200).json({ reply: text });
+       
+        if (data && data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+            const text = data.candidates[0].content.parts[0].text;
+            return res.status(200).json({ reply: text });
+        } else {
+
+            return res.status(200).json({ reply: "Sistem menerima respon kosong atau terfilter. Silahkan coba instruksi lain." });
+        }
 
     } catch (error) {
         console.error("Error Detail:", error);
-        res.status(500).json({ error: `Server Error: ${error.message}` });
+     
+        return res.status(500).json({ error: `Server Error: ${error.message}` });
     }
 }
