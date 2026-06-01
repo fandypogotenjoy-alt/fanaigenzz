@@ -7,19 +7,19 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Kunci API Vercel belum terbaca!' });
         }
 
-        // 1. Tangkap 'history' dari frontend, bukan 'prompt'
+        // 1. Tangkap 'history' dari frontend, sesuai struktur aplikasimu
         const history = req.body.history;
         
-        if (!history || history.length === 0) {
-            return res.status(400).json({ error: 'Data percakapan tidak ditemukan!' });
+        if (!history || !Array.isArray(history) || history.length === 0) {
+            return res.status(400).json({ error: 'Data percakapan tidak valid atau kosong!' });
         }
 
-        // 2. Direct Fetch ke Gemini (Gunakan gemini-1.5-flash yang valid)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        // 2. Direct Fetch ke Gemini (Balik pakai gemini-3.5-flash sesuai setingan lu)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: history // Langsung oper seluruh array history ke parameter contents
+                contents: history // Oper seluruh array history langsung
             })
         });
 
