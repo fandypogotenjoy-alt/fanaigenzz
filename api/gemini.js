@@ -7,14 +7,19 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Kunci API Vercel belum terbaca!' });
         }
 
-        const prompt = req.body.prompt;
+        // 1. Tangkap 'history' dari frontend, bukan 'prompt'
+        const history = req.body.history;
         
-        // Memakai caramu yang terbukti sakti: Direct Fetch ke Gemini 3.5 Flash!
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+        if (!history || history.length === 0) {
+            return res.status(400).json({ error: 'Data percakapan tidak ditemukan!' });
+        }
+
+        // 2. Direct Fetch ke Gemini (Gunakan gemini-1.5-flash yang valid)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
+                contents: history // Langsung oper seluruh array history ke parameter contents
             })
         });
 
