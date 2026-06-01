@@ -6,88 +6,124 @@
     <title>FANAIgenz - Next Gen AI</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        /* --- KODE CSS LAMA (PARTIKEL & CONTAINER UTAMA) --- */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
-        body { background-color: #050505; color: #fff; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        body { background-color: #050505; color: #fff; overflow: hidden; height: 100vh; position: relative; }
         #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         
-        .ai-container { 
-            position: relative; z-index: 2; 
-            background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(15px); 
-            border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 20px; 
-            padding: 30px; width: 95%; max-width: 800px; /* Diperlebar sedikit agar chat lega */
-            box-shadow: 0 0 40px rgba(0, 243, 255, 0.2); 
-            display: flex; flex-direction: column; max-height: 90vh; /* Agar tidak bablas dari layar */
+        .app-wrapper {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            z-index: 2;
         }
-        
-        .title { text-align: center; font-size: 2.5rem; font-weight: bold; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 5px; text-shadow: 0 0 10px #00f3ff, 0 0 40px #bd00ff; animation: glitch 2s infinite; }
-        .subtitle { text-align: center; color: #00f3ff; font-size: 1rem; margin-bottom: 20px; letter-spacing: 2px; }
 
-        /* --- KODE CSS BARU: AREA BUBBLE CHAT --- */
-        .chat-area {
-            flex-grow: 1; /* Mengisi ruang kosong */
-            min-height: 300px;
-            max-height: 400px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(189, 0, 255, 0.3);
-            border-radius: 10px;
+        .sidebar {
+            width: 280px;
+            background: rgba(5, 5, 15, 0.85);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(0, 243, 255, 0.2);
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #00f3ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            padding-bottom: 10px;
+            text-shadow: 0 0 5px #00f3ff;
+        }
+
+        .btn-new-chat {
+            width: 100%;
+            padding: 10px;
+            background: rgba(189, 0, 255, 0.1);
+            border: 1px dashed #bd00ff;
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+        .btn-new-chat:hover { background: #bd00ff; color: #000; box-shadow: 0 0 15px #bd00ff; }
+        .history-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar-thumb { background: rgba(189, 0, 255, 0.4); border-radius: 10px; }
+        .history-item {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; 
+            transition: 0.2s;
+        }
+        .history-item:hover {
+            background: rgba(0, 243, 255, 0.1);
+            border-color: #00f3ff;
+            color: #00f3ff;
+            padding-left: 15px; 
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
         
-        /* Custom Scrollbar biar makin Sci-Fi */
-        .chat-area::-webkit-scrollbar { width: 8px; }
-        .chat-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
-        .chat-area::-webkit-scrollbar-thumb { background: rgba(0, 243, 255, 0.5); border-radius: 10px; }
-
-        .bubble {
-            max-width: 80%;
-            padding: 15px 20px;
-            border-radius: 15px;
-            font-size: 1.15rem; /* Font diperbesar agar lebih jelas dan nyaman dibaca */
-            line-height: 1.5;
-            word-wrap: break-word;
-            animation: fadeIn 0.3s ease-out forwards;
+        .ai-container { 
+            background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(15px); 
+            border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 20px; 
+            padding: 30px; width: 100%; max-width: 750px; 
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.2); display: flex; flex-direction: column; max-height: 95vh; 
         }
+        
+        .title { text-align: center; font-size: 2.3rem; font-weight: bold; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 5px; text-shadow: 0 0 10px #00f3ff, 0 0 40px #bd00ff; animation: glitch 2s infinite; }
+        .subtitle { text-align: center; color: #00f3ff; font-size: 0.9rem; margin-bottom: 15px; letter-spacing: 2px; }
 
-        /* Bubble User (Merapat ke Kanan) */
-        .bubble.user {
-            align-self: flex-end;
-            background: rgba(0, 243, 255, 0.15);
-            border: 1px solid #00f3ff;
-            border-bottom-right-radius: 2px;
-            color: #fff;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        .chat-area {
+            flex-grow: 1; min-height: 300px; max-height: 450px; overflow-y: auto; background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(189, 0, 255, 0.3); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px;
         }
+        
+        .chat-area::-webkit-scrollbar { width: 6px; }
+        .chat-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .chat-area::-webkit-scrollbar-thumb { background: rgba(0, 243, 255, 0.4); border-radius: 10px; }
 
-        /* Bubble AI (Merapat ke Kiri) */
-        .bubble.ai {
-            align-self: flex-start;
-            background: rgba(189, 0, 255, 0.15);
-            border: 1px solid #bd00ff;
-            border-bottom-left-radius: 2px;
-            color: #e0e0e0;
-            box-shadow: 0 0 15px rgba(189, 0, 255, 0.1);
-        }
+        .bubble { max-width: 80%; padding: 12px 18px; border-radius: 15px; font-size: 1.1rem; line-height: 1.5; word-wrap: break-word; animation: fadeIn 0.3s ease-out forwards; }
+        .bubble.user { align-self: flex-end; background: rgba(0, 243, 255, 0.15); border: 1px solid #00f3ff; border-bottom-right-radius: 2px; color: #fff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); }
+        .bubble.ai { align-self: flex-start; background: rgba(189, 0, 255, 0.15); border: 1px solid #bd00ff; border-bottom-left-radius: 2px; color: #e0e0e0; box-shadow: 0 0 15px rgba(189, 0, 255, 0.1); }
 
-        /* --- KODE CSS INPUT & TOMBOL --- */
         .input-group { display: flex; gap: 10px; }
         .input-box { flex-grow: 1; padding: 15px; background: rgba(0, 0, 0, 0.5); border: 1px solid #bd00ff; border-radius: 10px; color: #00f3ff; font-size: 1.1rem; outline: none; }
         .input-box:focus { box-shadow: 0 0 20px rgba(189, 0, 255, 0.5); border-color: #00f3ff; }
         .btn-generate { padding: 0 25px; background: transparent; color: #00f3ff; font-size: 1.1rem; font-weight: bold; text-transform: uppercase; border: 2px solid #00f3ff; border-radius: 10px; cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
         .btn-generate:hover:not(:disabled) { background: #00f3ff; color: #000; box-shadow: 0 0 30px #00f3ff; transform: scale(1.05); }
         .btn-generate:disabled { border-color: #555; color: #555; cursor: not-allowed; box-shadow: none; }
-
-        /* --- CSS AUTH PROFIL --- */
         .auth-container { display: flex; justify-content: center; margin-bottom: 15px; }
-        .user-profile { display: none; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(0, 243, 255, 0.2); }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .user-avatar { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #00f3ff; }
-        .btn-logout { background: transparent; color: #ff0055; border: 1px solid #ff0055; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+        .user-profile { display: none; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(0, 243, 255, 0.2); }
+        .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+        .user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #00f3ff; }
+        .btn-logout { background: transparent; color: #ff0055; border: 1px solid #ff0055; padding: 4px 8px; border-radius: 5px; cursor: pointer; font-size: 0.75rem; }
         .hidden { display: none !important; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -98,46 +134,61 @@
 
     <canvas id="particle-canvas"></canvas>
 
-    <div class="ai-container">
-        <h1 class="title">FANAIgenz</h1>
-        <p class="subtitle">Neural Network System Online</p>
+    <div class="app-wrapper">
         
-        <div class="auth-container" id="login-area">
-            <div id="g_id_onload"
-                 data-client_id="1098689643267-hrlj7u8ciq302s795620b7cuqnf8vev2.apps.googleusercontent.com"
-                 data-callback="handleCredentialResponse"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" data-type="standard" data-theme="dark" data-size="large"></div>
+        <div class="sidebar">
+            <div class="sidebar-title">Riwayat Search</div>
+            <button class="btn-new-chat" onclick="clearChat()">+ Sesi Baru</button>
+            
+            <div class="history-list" id="history-box"></div>
         </div>
 
-        <div class="user-profile" id="user-area">
-            <div class="user-info">
-                <img src="" id="user-img" class="user-avatar" alt="Avatar">
-                <span id="user-name">User</span>
+        <div class="main-content">
+            <div class="ai-container">
+                <h1 class="title">FANAIgenz</h1>
+                <p class="subtitle">Neural Network System Online</p>
+                
+                <div class="auth-container" id="login-area">
+                    <div id="g_id_onload"
+                         data-client_id="1098689643267-hrlj7u8ciq302s795620b7cuqnf8vev2.apps.googleusercontent.com"
+                         data-callback="handleCredentialResponse"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin" data-type="standard" data-theme="dark" data-size="large"></div>
+                </div>
+
+                <div class="user-profile" id="user-area">
+                    <div class="user-info">
+                        <img src="" id="user-img" class="user-avatar" alt="Avatar">
+                        <span id="user-name">User</span>
+                    </div>
+                    <button class="btn-logout" onclick="logout()">Disconnect</button>
+                </div>
+                
+                <div class="chat-area" id="chat-box">
+                    <div class="bubble ai" id="welcome-msg" style="display: none;">System Online. Riwayat pencarian aktif di sidebar.</div>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="ai-input" class="input-box" placeholder="Silahkan login dahulu..." disabled onkeypress="handleEnter(event)">
+                    <button class="btn-generate" id="btn-submit" onclick="generateAI()" disabled>Kirim</button>
+                </div>
             </div>
-            <button class="btn-logout" onclick="logout()">Disconnect</button>
-        </div>
-        
-        <div class="chat-area" id="chat-box">
-            <div class="bubble ai" id="welcome-msg" style="display: none;">System Online. Silakan masukkan perintah.</div>
         </div>
 
-        <div class="input-group">
-            <input type="text" id="ai-input" class="input-box" placeholder="Silahkan login dahulu..." disabled onkeypress="handleEnter(event)">
-            <button class="btn-generate" id="btn-submit" onclick="generateAI()" disabled>Kirim</button>
-        </div>
     </div>
 
     <script>
-        // --- LOGIK AUTH ---
         let userToken = null;
+        let chatHistory = [];
+        let searchHistoryList = JSON.parse(localStorage.getItem('fanaigenz_history')) || []; 
+        window.onload = function() {
+            renderSidebar();
+        };
 
         function handleCredentialResponse(response) {
             userToken = response.credential;
-            const base64Url = userToken.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const payload = JSON.parse(window.atob(base64));
+            const payload = JSON.parse(window.atob(userToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
 
             document.getElementById('user-img').src = payload.picture;
             document.getElementById('user-name').innerText = payload.name;
@@ -152,26 +203,40 @@
 
         function logout() {
             userToken = null;
+            clearChat();
             document.getElementById('login-area').classList.remove('hidden');
             document.getElementById('user-area').style.display = 'none';
             document.getElementById('ai-input').disabled = true;
             document.getElementById('ai-input').value = '';
             document.getElementById('ai-input').placeholder = "Silahkan login dahulu...";
             document.getElementById('btn-submit').disabled = true;
-            
-            // Bersihkan riwayat chat saat logout
-            const chatBox = document.getElementById('chat-box');
-            chatBox.innerHTML = '<div class="bubble ai" id="welcome-msg" style="display: none;">System Online. Silakan masukkan perintah.</div>';
         }
 
-        // --- FUNGSI ENTER UNTUK KIRIM ---
         function handleEnter(event) {
-            if (event.key === "Enter") {
-                generateAI();
-            }
+            if (event.key === "Enter") generateAI();
         }
 
-        // --- LOGIK PEMBUATAN BUBBLE CHAT & FETCH ---
+        function clearChat() {
+            chatHistory = [];
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = '<div class="bubble ai" id="welcome-msg">System Online. Riwayat pencarian aktif di sidebar.</div>';
+            document.getElementById('ai-input').focus();
+        }
+
+        function renderSidebar() {
+            const historyBox = document.getElementById('history-box');
+            historyBox.innerHTML = '';
+            searchHistoryList.slice().reverse().forEach(text => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerText = text;
+                    if(!userToken) { alert("Silahkan login Google dahulu!"); return; }
+                    document.getElementById('ai-input').value = text;
+                    generateAI();
+                };
+                historyBox.appendChild(item);
+            });
+        }
         async function generateAI() {
             const inputField = document.getElementById('ai-input');
             const chatBox = document.getElementById('chat-box');
@@ -180,70 +245,65 @@
             
             if (!prompt || !userToken) return;
 
-            // 1. Cetak Bubble User di layar
+            if (!searchHistoryList.includes(prompt)) {
+                searchHistoryList.push(prompt);
+                localStorage.setItem('fanaigenz_history', JSON.stringify(searchHistoryList));
+                renderSidebar();
+            }
+
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
             const userBubble = document.createElement('div');
             userBubble.className = 'bubble user';
             userBubble.innerText = prompt;
             chatBox.appendChild(userBubble);
 
-            // Bersihkan input dan matikan tombol sementara
-            inputField.value = '';
-            inputField.disabled = true;
-            btnSubmit.disabled = true;
-            
-            // Otomatis scroll ke paling bawah
+            inputField.value = ''; inputField.disabled = true; btnSubmit.disabled = true;
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // 2. Cetak Bubble AI sementara (Loading)
             const aiBubble = document.createElement('div');
             aiBubble.className = 'bubble ai';
-            aiBubble.innerText = "Memproses data...";
+            aiBubble.innerText = "Memproses data jaringan...";
             chatBox.appendChild(aiBubble);
             chatBox.scrollTop = chatBox.scrollHeight;
 
             try {
-                // Tembak ke Vercel (yang sudah menggunakan kode fetch saktimu)
                 const response = await fetch('/api/gemini', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt, token: userToken })
+                    body: JSON.stringify({ history: chatHistory, token: userToken })
                 });
 
                 const data = await response.json();
                 
                 if(data.error) {
                     aiBubble.innerText = `[ERROR]: ${data.error}`;
+                    chatHistory.pop();
                 } else {
-                    // 3. Efek Ketik (Typewriter) untuk jawaban AI
                     aiBubble.innerText = "";
                     let aiText = data.reply;
+                    chatHistory.push({ role: "model", parts: [{ text: aiText }] });
+
                     let i = 0;
-                    
                     function typeWriter() {
                         if (i < aiText.length) {
                             aiBubble.innerHTML += aiText.charAt(i) === '\n' ? '<br>' : aiText.charAt(i);
                             i++;
-                            // Auto scroll terus saat ngetik
                             chatBox.scrollTop = chatBox.scrollHeight;
                             setTimeout(typeWriter, 15);
                         } else {
-                            // Nyalakan input lagi setelah selesai ngetik
-                            inputField.disabled = false;
-                            btnSubmit.disabled = false;
-                            inputField.focus();
+                            inputField.disabled = false; btnSubmit.disabled = false; inputField.focus();
                         }
                     }
                     typeWriter();
                 }
-
             } catch (err) {
-                aiBubble.innerText = "[ERROR SISTEM]: Gagal terhubung ke jaringan server.";
-                inputField.disabled = false;
-                btnSubmit.disabled = false;
+                aiBubble.innerText = "[ERROR SISTEM]: Hubungan terputus.";
+                chatHistory.pop();
+                inputField.disabled = false; btnSubmit.disabled = false;
             }
         }
 
-        // --- KODE ANIMASI CANVAS PARTIKEL ---
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
@@ -257,7 +317,7 @@
             update() { this.x += this.speedX; this.y += this.speedY; if (this.x < 0 || this.x > canvas.width) this.speedX *= -1; if (this.y < 0 || this.y > canvas.height) this.speedY *= -1; }
             draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
         }
-        function init() { for (let i = 0; i < 70; i++) particlesArray.push(new Particle()); }
+        function init() { for (let i = 0; i < 60; i++) particlesArray.push(new Particle()); }
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < particlesArray.length; i++) {
@@ -265,7 +325,7 @@
                 for (let j = i; j < particlesArray.length; j++) {
                     const dx = particlesArray[i].x - particlesArray[j].x; const dy = particlesArray[i].y - particlesArray[j].y;
                     if (Math.sqrt(dx*dx + dy*dy) < 100) {
-                        ctx.beginPath(); ctx.strokeStyle = 'rgba(0,243,255,0.1)'; ctx.lineWidth = 0.5;
+                        ctx.beginPath(); ctx.strokeStyle = 'rgba(0,243,255,0.08)'; ctx.lineWidth = 0.5;
                         ctx.moveTo(particlesArray[i].x, particlesArray[i].y); ctx.lineTo(particlesArray[j].x, particlesArray[j].y); ctx.stroke();
                     }
                 }
