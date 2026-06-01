@@ -15,11 +15,20 @@ export default async function handler(req, res) {
         }
 
         // 2. Direct Fetch ke Gemini (Balik pakai gemini-3.5-flash sesuai setingan lu)
+    // Direct Fetch ke Gemini 3.5 Flash dengan System Instruction
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: history // Oper seluruh array history langsung
+            body: JSON.stringify({  // <--- NAH INI DIA PERINTAHNYA!
+                // INI DOKTRIN IDENTITASNYA:
+                systemInstruction: {
+                    parts: [{ 
+                        text: "Kamu adalah AINEXTGENZ..." 
+                    }]
+                },
+                contents: history 
+            })
+        });
             })
         });
 
