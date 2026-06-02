@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#00f0ff">
+    <meta name="theme-color" content="#00f0ff">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AINEXTGENZ - Next Gen AI</title>
@@ -56,6 +56,69 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes glitch { 0%, 100% { text-shadow: 2px 0 #00f3ff, -2px 0 #bd00ff; } 50% { text-shadow: -2px 0 #00f3ff, 2px 0 #bd00ff; } }
+
+        /* PENGATURAN RESPONSIVE UNTUK HP (MOBILE) */
+        @media (max-width: 768px) {
+            .app-wrapper {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 130px; 
+                border-right: none;
+                border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+                padding: 10px;
+            }
+            
+            .main-content {
+                padding: 10px;
+                height: calc(100vh - 130px);
+            }
+            
+            .ai-container {
+                padding: 15px;
+                width: 100%;
+                height: 100%;
+                max-height: 100%;
+                border-radius: 15px;
+            }
+            
+            .title {
+                font-size: 1.5rem;
+                letter-spacing: 2px;
+            }
+            
+            .subtitle {
+                font-size: 0.8rem;
+                margin-bottom: 10px;
+            }
+            
+            .chat-area {
+                padding: 15px 10px;
+                max-height: none; 
+            }
+            
+            .bubble {
+                max-width: 95%; 
+                font-size: 0.95rem;
+                padding: 10px 15px;
+            }
+            
+            .input-group {
+                gap: 5px;
+            }
+            
+            .input-box {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+            
+            .btn-generate {
+                padding: 0 15px;
+                font-size: 0.95rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -153,109 +216,4 @@
         }
 
         function renderSidebar() {
-            const historyBox = document.getElementById('history-box');
-            historyBox.innerHTML = '';
-            searchHistoryList.slice().reverse().forEach(text => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                item.innerText = text;
-                item.onclick = function() {
-                    if(!userToken) { alert("Silahkan login Google dahulu!"); return; }
-                    document.getElementById('ai-input').value = text;
-                    generateAI();
-                };
-                historyBox.appendChild(item);
-            });
-        }
-        
-        async function generateAI() {
-            const inputField = document.getElementById('ai-input');
-            const chatBox = document.getElementById('chat-box');
-            const btnSubmit = document.getElementById('btn-submit');
-            const prompt = inputField.value.trim();
-            
-            if (!prompt || !userToken) return;
-
-            if (!searchHistoryList.includes(prompt)) {
-                searchHistoryList.push(prompt);
-                localStorage.setItem('fanaigenz_history', JSON.stringify(searchHistoryList));
-                renderSidebar();
-            }
-
-            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const userBubble = document.createElement('div');
-            userBubble.className = 'bubble user'; userBubble.innerText = prompt;
-            chatBox.appendChild(userBubble);
-
-            inputField.value = ''; inputField.disabled = true; btnSubmit.disabled = true;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            const aiBubble = document.createElement('div');
-            aiBubble.className = 'bubble ai'; aiBubble.innerText = "Memproses data jaringan...";
-            chatBox.appendChild(aiBubble); chatBox.scrollTop = chatBox.scrollHeight;
-
-            try {
-                const response = await fetch('/api/gemini', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ history: chatHistory, token: userToken })
-                });
-
-                const data = await response.json();
-                if(data.error) {
-                    aiBubble.innerText = `[ERROR]: ${data.error}`;
-                    chatHistory.pop();
-                } else {
-                    aiBubble.innerText = "";
-                    let aiText = data.reply;
-                    chatHistory.push({ role: "model", parts: [{ text: aiText }] });
-                    let i = 0;
-                    function typeWriter() {
-                        if (i < aiText.length) {
-                            aiBubble.innerHTML += aiText.charAt(i) === '\n' ? '<br>' : aiText.charAt(i);
-                            i++; chatBox.scrollTop = chatBox.scrollHeight; setTimeout(typeWriter, 15);
-                        } else {
-                            inputField.disabled = false; btnSubmit.disabled = false; inputField.focus();
-                        }
-                    }
-                    typeWriter();
-                }
-            } catch (err) {
-                aiBubble.innerText = "[ERROR SISTEM]: Hubungan terputus."; chatHistory.pop();
-                inputField.disabled = false; btnSubmit.disabled = false;
-            }
-        }
-
-        const canvas = document.getElementById('particle-canvas'); const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight; let particlesArray = [];
-        class Particle {
-            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 3 + 1; this.speedX = (Math.random() * 2) - 1; this.speedY = (Math.random() * 2) - 1; this.color = Math.random() > 0.5 ? '#00f3ff' : '#bd00ff'; }
-            update() { this.x += this.speedX; this.y += this.speedY; if (this.x < 0 || this.x > canvas.width) this.speedX *= -1; if (this.y < 0 || this.y > canvas.height) this.speedY *= -1; }
-            draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
-        }
-        function init() { for (let i = 0; i < 60; i++) particlesArray.push(new Particle()); }
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particlesArray.length; i++) {
-                particlesArray[i].update(); particlesArray[i].draw();
-                for (let j = i; j < particlesArray.length; j++) {
-                    const dx = particlesArray[i].x - particlesArray[j].x; const dy = particlesArray[i].y - particlesArray[j].y;
-                    if (Math.sqrt(dx*dx + dy*dy) < 100) { ctx.beginPath(); ctx.strokeStyle = 'rgba(0,243,255,0.08)'; ctx.lineWidth = 0.5; ctx.moveTo(particlesArray[i].x, particlesArray[i].y); ctx.lineTo(particlesArray[j].x, particlesArray[j].y); ctx.stroke(); }
-                }
-            } requestAnimationFrame(animate);
-        }
-        init(); animate(); window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; particlesArray = []; init(); });
-</script> <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('ServiceWorker AINEXTGENZ siap: ', registration.scope);
-            })
-            .catch(err => {
-              console.log('ServiceWorker gagal: ', err);
-            });
-        });
-      }
-    </script>
-</body>
-</html>
+            const historyBox =
