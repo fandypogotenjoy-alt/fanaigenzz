@@ -10,12 +10,11 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
         
-        /* PENTING: Ubah height dari 100vh menjadi 100dvh */
-        body { background-color: #050505; color: #fff; overflow: hidden; height: 100dvh; position: relative; }
-        #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        body { background-color: #050505; color: #fff; overflow: hidden; height: 100vh; position: relative; }
+        /* Ubah position canvas menjadi fixed agar background tidak rusak saat di-scroll */
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
         
-        /* PENTING: Ubah height dari 100vh menjadi 100dvh */
-        .app-wrapper { display: flex; width: 100vw; height: 100dvh; position: relative; z-index: 2; }
+        .app-wrapper { display: flex; width: 100vw; height: 100vh; position: relative; z-index: 2; }
 
         .sidebar { width: 280px; background: rgba(5, 5, 15, 0.85); backdrop-filter: blur(10px); border-right: 1px solid rgba(0, 243, 255, 0.2); padding: 20px; display: flex; flex-direction: column; gap: 15px; transition: 0.3s; }
         .sidebar-title { font-size: 1.1rem; font-weight: bold; color: #00f3ff; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid rgba(0, 243, 255, 0.2); padding-bottom: 10px; text-shadow: 0 0 5px #00f3ff; }
@@ -60,31 +59,38 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes glitch { 0%, 100% { text-shadow: 2px 0 #00f3ff, -2px 0 #bd00ff; } 50% { text-shadow: -2px 0 #00f3ff, 2px 0 #bd00ff; } }
 
-        /* PENGATURAN RESPONSIVE UNTUK HP (MOBILE) */
+        /* PENGATURAN RESPONSIVE UNTUK HP (BISA DI-SCROLL) */
         @media (max-width: 768px) {
+            body {
+                overflow-y: auto; /* INI KUNCINYA: Buka kuncian scroll layarnya */
+                height: auto;
+                min-height: 100vh;
+            }
+            
             .app-wrapper {
                 flex-direction: column;
+                height: auto;
+                min-height: 100vh;
             }
             
             .sidebar {
                 width: 100%;
-                height: 130px; 
+                height: 140px; 
                 border-right: none;
                 border-bottom: 1px solid rgba(0, 243, 255, 0.2);
                 padding: 10px;
             }
             
             .main-content {
-                padding: 10px;
-                /* PENTING: Ubah calc(100vh - 130px) menjadi calc(100dvh - 130px) */
-                height: calc(100dvh - 130px);
+                padding: 15px 10px 40px 10px; /* Tambahan jarak di paling bawah agar tidak mepet layar */
+                height: auto;
             }
             
             .ai-container {
                 padding: 15px;
                 width: 100%;
-                height: 100%;
-                max-height: 100%;
+                height: auto;
+                max-height: none; /* Biarkan memanjang menyesuaikan HP */
                 border-radius: 15px;
             }
             
@@ -100,7 +106,8 @@
             
             .chat-area {
                 padding: 15px 10px;
-                max-height: none; 
+                min-height: 400px; /* Area chat dijamin selalu cukup besar */
+                max-height: 500px; 
             }
             
             .bubble {
@@ -111,6 +118,7 @@
             
             .input-group {
                 gap: 5px;
+                margin-bottom: 15px;
             }
             
             .input-box {
