@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00f0ff">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AINEXTGENZ - Next Gen AI</title>
@@ -242,6 +244,18 @@
             } requestAnimationFrame(animate);
         }
         init(); animate(); window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; particlesArray = []; init(); });
+</script> <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker AINEXTGENZ siap: ', registration.scope);
+            })
+            .catch(err => {
+              console.log('ServiceWorker gagal: ', err);
+            });
+        });
+      }
     </script>
 </body>
 </html>
